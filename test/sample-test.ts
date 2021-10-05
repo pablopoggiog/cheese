@@ -2,6 +2,10 @@ import { expect } from "chai";
 import { ContractReceipt, ContractTransaction, Contract } from "ethers";
 import { ethers } from "hardhat";
 
+const isErrorWithMessage = (error: any): error is { message: string } => {
+  return "message" in error;
+};
+
 describe("NonFungibleCheese", async () => {
   const newItems = [
     {
@@ -35,7 +39,7 @@ describe("NonFungibleCheese", async () => {
 
       return minedTransaction;
     } catch (error) {
-      console.log(error);
+      if (isErrorWithMessage(error)) console.log(error.message);
     }
   };
 
@@ -52,7 +56,7 @@ describe("NonFungibleCheese", async () => {
             expect(args).to.include(newItems[index].image, newItems[index].color);
           });
       } catch (error) {
-        console.log({ error });
+        if (isErrorWithMessage(error)) console.log(error.message);
       }
     } else {
       ("Something failed deploying the contract");
@@ -72,7 +76,7 @@ describe("NonFungibleCheese", async () => {
         expect(minedTransaction.events?.[1].event).to.equal("ItemMinted");
         expect(minedTransaction.events?.[1].args).to.include(minedTransaction.from);
       } catch (error) {
-        console.log({ error });
+        if (isErrorWithMessage(error)) console.log(error.message);
       }
     } else {
       ("Something failed deploying the contract");
@@ -86,8 +90,8 @@ describe("NonFungibleCheese", async () => {
       try {
         // Inline assertion, as declaring variables/constants outside of an expect throws an exception and falls in the catch
         await expect(contract.mint()).to.be.revertedWith("There are no items available");
-      } catch (error: any) {
-        console.log(error.message);
+      } catch (error) {
+        if (isErrorWithMessage(error)) console.log(error.message);
       }
     } else {
       ("Something failed deploying the contract");
