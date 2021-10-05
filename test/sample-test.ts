@@ -1,19 +1,36 @@
-import { expect } from 'chai';
-import { run, ethers } from 'hardhat';
+import { expect } from "chai";
+import { ContractReceipt, ContractTransaction } from "ethers";
+import { ethers } from "hardhat";
 
-describe('Greeter', function () {
-  it("Should return the new greeting once it's changed", async function () {
-    const Greeter = await ethers.getContractFactory('Greeter');
-    const greeter = await Greeter.deploy('Hello, world!');
-    await greeter.deployed();
+const newItems = [
+  {
+    name: "Parmesan",
+    description: "Savory and salty cheese",
+    image: "https://pablopoggiog.github.io/eneftees/static/media/honest-work.ad914397.jpg",
+    color: "red",
+  },
+  {
+    name: "Sardo",
+    description: "Pretty cool for picadas",
+    image: "https://pablopoggiog.github.io/eneftees/static/media/honest-work.ad914397.jpg",
+    color: "blue",
+  },
+];
 
-    expect(await greeter.greet()).to.equal('Hello, world!');
+describe("NonFungibleCheese", function () {
+  it("emits ItemAdded events with the right values when new items are added to the collection", async function () {
+    const contractFactory = await ethers.getContractFactory("NonFungibleCheese");
+    const contract = await contractFactory.deploy();
+    await contract.deployed();
 
-    const setGreetingTx = await greeter.setGreeting('Hola, mundo!');
+    const addNewItemCall: ContractTransaction = await contract.addNewItems(newItems);
 
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
+    const minedTransaction: ContractReceipt = await addNewItemCall.wait();
 
-    expect(await greeter.greet()).to.equal('Hola, mundo!');
+    minedTransaction.events?.map(({ event, args }, index) => {
+      expect(event).to.equal("ItemAdded");
+      expect(args).to.include(newItems[index].name, newItems[index].description);
+      expect(args).to.include(newItems[index].image, newItems[index].color);
+    });
   });
 });
